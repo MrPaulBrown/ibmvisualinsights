@@ -23,12 +23,12 @@ VIAPIKEY: API Key for the VIUSER
 
 The scripts use the following libraries:
 
-opencv-python
-requests
-watchdog
+opencv-python  
+requests  
+watchdog  
 
 Install via pip using:
 
-python -m pip install <library-name>
+`python -m pip install <library-name>`
 
 Refer to the README.md for each script for further set-up and usage
