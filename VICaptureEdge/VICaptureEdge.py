@@ -205,10 +205,6 @@ def recordVideo(config):
     # Get options
     image_path = config['Record']['OutputDirectory']
 
-    # Set up camera
-    cam = cv2.VideoCapture(int(config['Record']['CameraID']))
-    cv2.namedWindow("capture", cv2.WINDOW_NORMAL)
-
     # Crop
     crop = config['Crop'].getboolean('crop')
     xmin = config['Crop']['xmin']
@@ -218,6 +214,11 @@ def recordVideo(config):
 
     score_type = 'cls'
 
+    score = False
+
+    # Set up camera & windows
+    cam = cv2.VideoCapture(int(config['Record']['CameraID']))
+    cv2.namedWindow("capture", cv2.WINDOW_NORMAL)
     if crop:
         cv2.namedWindow("crop")
 
@@ -230,10 +231,6 @@ def recordVideo(config):
 
     # Repeat until duration finishes
     while True:
-
-        # Create image path Name
-        image_basename = path.join(image_path, "{}".format(time.time()))
-        image_filename = image_basename + ".jpg"
 
         # Record a frame
         ret, frame = cam.read()
@@ -248,8 +245,72 @@ def recordVideo(config):
             crop_frame = frame
             score_frame = frame.copy()
 
-        # Write image to file
-        cv2.imwrite(image_filename, score_frame)
+        # Get keyboard input
+        k = cv2.waitKey(1)
+        cloud_score = False
+
+        if k%256 == 27:
+            # ESC pressed - break from loop
+            print("Escape hit, closing...")
+            break
+        elif k%256 == 32:
+            # Space pressed - score to cloud
+            cloud_score = True
+        elif k%256 == 115 or k%256 == 83:
+            # S pressed - toggle scoring
+            score = not score
+        elif k%256 == 99 or k%256 == 67:
+            # C pressed - switch to cls mode
+            score_type = 'cls'
+        elif k%256 == 111 or k%256 == 79:
+            # O pressed - switch to od mode
+            score_type = 'od'
+
+        # Set dets to None for the iteration
+        dets = None
+        det = None
+
+        if score:
+
+            # Create image path Name
+            image_basename = path.join(image_path, "{}".format(time.time()))
+            image_filename = image_basename + ".jpg"
+
+            # Write image to file
+            cv2.imwrite(image_filename, score_frame)
+
+            # Score image on edge
+            r = score_image(image_filename, config, score_type)
+
+            if r.status_code == 200:
+
+                if score_type == 'cls':
+                    # Get det and conf from classifier
+                    (det, conf) = parseResponse(r.text)
+                else:
+                    # Get dets from OD response
+                    dets = parseODResponse(r.text)
+
+                # If cloud scoring
+                if cloud_score:
+                    # Score the image on a thread - asyncronous
+                    threading.Thread(target=cloud_score_image,
+                        args=(image_filename, config, score_type),
+                        kwargs={},
+                        ).start()
+            else:
+                # Score failed
+                print("{}: {}".format(r.status_code, r.text))
+
+            # Keep file if cloud scoring
+            if not cloud_score:
+                # Not cloud scoring - remove file
+                os.remove(image_filename)
+
+        # Calc timings
+        current_time = time.clock()
+        duration = current_time - last_time
+        last_time = current_time
 
         # Show the class and draw the detections on the frames
         if det:
@@ -265,59 +326,6 @@ def recordVideo(config):
         if crop:
             cv2.imshow("crop", crop_frame)
 
-        # Get keyboard input
-        k = cv2.waitKey(1)
-        cloud_score = False
-
-        if k%256 == 27:
-            # ESC pressed - break from loop
-            print("Escape hit, closing...")
-            break
-        elif k%256 == 32:
-            # Space pressed - score to cloud
-            cloud_score = True
-        elif k%256 == 99 or k%256 == 67:
-            # C pressed - switch to cls mode
-            score_type = 'cls'
-        elif k%256 == 111 or k%256 == 79:
-            # O pressed - switch to od mode
-            score_type = 'od'
-
-        # Set dets to None for the iteration
-        dets = None
-        det = None
-
-        r = score_image(image_filename, config, score_type)
-
-        if r.status_code == 200:
-
-            if score_type == 'cls':
-                # Get det and conf from classifier
-                (det, conf) = parseResponse(r.text)
-            else:
-                # Get dets from OD response
-                dets = parseODResponse(r.text)
-
-            # If cloud scoring
-            if cloud_score:
-                # Score the image on a thread - asyncronous
-                threading.Thread(target=cloud_score_image,
-                    args=(image_filename, config, score_type),
-                    kwargs={},
-                    ).start()
-        else:
-            # Score failed
-            print("{}: {}".format(r.status_code, r.text))
-
-        # Keep file if cloud scoring
-        if not cloud_score:
-            # Not cloud scoring - remove file
-            os.remove(image_filename)
-
-        # Calc timings
-        current_time = time.clock()
-        duration = current_time - last_time
-        last_time = current_time
 
     # Stop capture and delete windows
     cam.release()
