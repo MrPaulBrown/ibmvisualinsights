@@ -73,9 +73,7 @@ def showText(img, text, x, y, color):
 
 def showDuration(frame, duration):
     if duration > 0.0:
-        dur_ms = int(duration * 1000)
-        fps = int(1 / duration)
-        showText(frame, "{:4d} ms, {:4d} FPS".format(dur_ms, fps), 445, 465, (0, 255, 0))
+        showText(frame, "{:.2f} s".format(duration), 560, 465, (0, 255, 0))
 
 # Draws the classification result
 def showClass(frame, det, conf):
@@ -171,15 +169,22 @@ def cloud_score_image(image_path, config, score_type):
 
     return r
 
-def displayImage(image_path, det, conf, dets):
+def displayImage(image_path):
 
     img = cv2.imread(image_path, cv2.IMREAD_COLOR)
+    cv2.imshow("score", img)
+
+    return img
+
+def updateImage(img, det, conf, dets, duration):
 
     # Show the class or draw the detections on the snapshot
     if det:
         showClass(img, det, conf)
     if dets:
         showDets(img, img, dets)
+
+    showDuration(img, duration)
 
     cv2.imshow("score", img)
 
@@ -200,10 +205,13 @@ class WatcherHandler(PatternMatchingEventHandler):
             path/to/observed/file
         """
         # the file will be processed there
+        img = displayImage(event.src_path)
 
         score_type = config['Cloud']['ModelType']
 
+        score_time = time.clock()
         r = cloud_score_image(event.src_path, config, score_type)
+        duration = time.clock() - score_time
 
         if r.status_code == 200:
 
@@ -218,12 +226,11 @@ class WatcherHandler(PatternMatchingEventHandler):
                 # Get dets from OD response
                 dets = parseODResponse(r.text)
 
-            displayImage(event.src_path, det, conf, dets)
+            updateImage(img, det, conf, dets, duration)
 
         else:
             # Score failed
             print("{}: {}".format(r.status_code, r.text))
-
 
     def log(self, event):
         """
@@ -237,23 +244,33 @@ class WatcherHandler(PatternMatchingEventHandler):
         # the file will be processed there
         print("{}: {}".format(event.src_path, event.event_type))  # print now only for degug
 
+    def match(self, event):
+        regex = config['Images']['Regex']
+        match = False
+        if regex == '':
+            match = True
+        else:
+            match = re.match(config['Images']['Regex'], path.basename(event.src_path))
+        return match
+
     def on_modified(self, event):
         self.log(event)
 
+        match = self.match(event)
+
         # On Windows, score on modified event
-        if platform.system() == "Windows":
-            if re.match(config['Images']['Regex'], path.basename(event.src_path)):
-                # print('Matches pattern!')
-                self.score(event)
+        if match and platform.system() == "Windows":
+            # print('Matches pattern!')
+            self.score(event)
 
     def on_created(self, event):
         self.log(event)
 
+        match = self.match(event)
+
         # Other platforms, score on created event
-        if platform.system() != "Windows":
-            if re.match(config['Images']['Regex'], path.basename(event.src_path)):
-                # print('Matches pattern!')
-                self.score(event)
+        if match and platform.system() != "Windows":
+            self.score(event)
 
 if __name__ == '__main__':
     args = sys.argv[1:]
