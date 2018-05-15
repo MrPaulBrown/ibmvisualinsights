@@ -217,7 +217,8 @@ def recordVideo(config):
     score = False
 
     # Set up camera & windows
-    cam = cv2.VideoCapture(int(config['Record']['CameraID']))
+    cam_id = 0
+    cam = cv2.VideoCapture(0)
     cv2.namedWindow("capture", cv2.WINDOW_NORMAL)
     if crop:
         cv2.namedWindow("crop")
@@ -288,7 +289,7 @@ def recordVideo(config):
             # Score image on edge
             score_start_time = time.clock()
             r = score_image(image_filename, config, score_type)
-            score_duration = score_start_time - time.clock()
+            score_duration = time.clock() - score_start_time
 
             if r.status_code == 200:
 
