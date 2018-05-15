@@ -14,23 +14,23 @@ These scripts require at least one model to be deployed in IBM Visual Insights a
 
 Modify the config file (VICaptureCloud.config) to set the following options:
 
-[Record]
-OutputDirectory: **Set to the local path to store images**
-
-[Crop]
-crop: **Set to _True_ to crop the frame or _False_ otherwise**
-xmin: **X min of crop window**
-ymin: **Y min of crop window**
-xmax: **X max of crop window**
-ymax: **Y max of crop window**
-
-[Cloud]
-URL: **Set to Visual Insights uploadScoreImage URL**
-Tenant: **Set to desired tenant ID**
-CLSCell: **Set to scoring cell for classification model**
-CLSProduct: **Set to product type code for classification model**
-ODCell: **Set to scoring cell for object detection model**
-ODProduct: **Set to product type code for object detection model**
+[Record]  
+OutputDirectory: **Set to the local path to store images**  
+  
+[Crop]  
+crop: **Set to _True_ to crop the frame or _False_ otherwise**  
+xmin: **X min of crop window**  
+ymin: **Y min of crop window**  
+xmax: **X max of crop window**  
+ymax: **Y max of crop window**  
+  
+[Cloud]  
+URL: **Set to Visual Insights uploadScoreImage URL**  
+Tenant: **Set to desired tenant ID**  
+CLSCell: **Set to scoring cell for classification model**  
+CLSProduct: **Set to product type code for classification model**  
+ODCell: **Set to scoring cell for object detection model**  
+ODProduct: **Set to product type code for object detection model**  
 
 ## Usage
 
@@ -40,13 +40,13 @@ Run from python, e.g.
 
 The script will create a window showing the current capture.  The following keyboard command can be used:
 
-Commands:
-Esc: Quit
-Space: Action (save image or score image)
-S: Toggle scoring (default: off)
-C: Switch to classification mode (default: on)
-O: Switch to Object Detection mode
-(0-9): Switch to camera ID #0-9 (default 0)
+Commands:  
+Esc: Quit  
+Space: Action (save image or score image)  
+S: Toggle scoring (default: off)  
+C: Switch to classification mode (default: on)  
+O: Switch to Object Detection mode  
+(0-9): Switch to camera ID #0-9 (default 0)  
 
 In scoring mode, the space bar can be used to send the current frame to IBM Visual Insights.
 
