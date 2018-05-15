@@ -125,11 +125,11 @@ def showText(img, text, x, y, color):
     font = cv2.FONT_HERSHEY_SIMPLEX
     cv2.putText(img, text, (x, y), font, 0.6, color, 2, cv2.LINE_AA)
 
-def showDuration(frame, duration):
+def showDuration(frame, duration, score_duration):
     if duration > 0.0:
-        dur_ms = int(duration * 1000)
         fps = int(1 / duration)
-        showText(frame, "{:4d} ms, {:4d} FPS".format(dur_ms, fps), 445, 465, (0, 255, 0))
+        score_dur_ms = int(score_duration * 1000)
+        showText(frame, "{:4d} ms, {:4d} FPS".format(score_dur_ms, fps), 430, 465, (0, 255, 0))
 
 # Draws the classification result
 def showClass(frame, det, conf):
@@ -265,10 +265,16 @@ def recordVideo(config):
         elif k%256 == 111 or k%256 == 79:
             # O pressed - switch to od mode
             score_type = 'od'
+        elif k%256 >= 48 and k%256 <= 57:
+            # (0-9) pressed - switch camera ID if changed
+            if (k%256 - 48) != cam_id:
+                cam_id = k%256 - 48
+                cam = cv2.VideoCapture(cam_id)
 
         # Set dets to None for the iteration
         dets = None
         det = None
+        score_duration = 0.0
 
         if score:
 
@@ -280,7 +286,9 @@ def recordVideo(config):
             cv2.imwrite(image_filename, score_frame)
 
             # Score image on edge
+            score_start_time = time.clock()
             r = score_image(image_filename, config, score_type)
+            score_duration = score_start_time - time.clock()
 
             if r.status_code == 200:
 
@@ -319,7 +327,7 @@ def recordVideo(config):
             showDets(frame, crop_frame, dets)
 
         # Show timer / frame rate
-        showDuration(frame, duration)
+        showDuration(frame, duration, score_duration)
 
         # Show the frames in a window
         cv2.imshow("capture", frame)
@@ -331,6 +339,15 @@ def recordVideo(config):
     cam.release()
     cv2.destroyAllWindows()
 
+def printHelp():
+    print('Commands:')
+    print('Esc: Quit')
+    print('Space: Action (score image to cloud)')
+    print('S: Toggle scoring')
+    print('C: Switch to classification mode (default)')
+    print('O: Switch to Object Detection mode')
+    print('(0-9): Switch to camera ID #0-9 (default 0)')
+
 if __name__ == '__main__':
     args = sys.argv[1:]
 
@@ -339,4 +356,8 @@ if __name__ == '__main__':
     config_path = args[0] if args else default_config
     config = parser.read(config_path)
 
+    # Print help text
+    printHelp()
+
+    # Start recording
     recordVideo(parser)
