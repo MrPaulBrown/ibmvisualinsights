@@ -236,13 +236,9 @@ class VISimulator(BoxLayout):
                 slider.value = 0.5
                 slider.step = 0.1
 
-                # Create slider value
-                slider_val = Label(text='{:.1f}%'.format(slider.value))
-
                 # Add widgets
                 slider_layout.add_widget(slider_label)
                 slider_layout.add_widget(slider)
-                slider_layout.add_widget(slider_val)
 
                 self.ids.rates_box.add_widget(slider_layout)
 
@@ -325,7 +321,6 @@ class VISimulator(BoxLayout):
                         break
 
         return random.choice(img_set)
-
 
     def simulation(self):
 
