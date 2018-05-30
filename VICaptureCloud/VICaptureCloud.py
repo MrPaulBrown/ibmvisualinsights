@@ -97,33 +97,59 @@ def parseODResponse(text):
 
     return dets
 
+SCALE_SIZE = 480
+TEXT_COLOR = (0, 255, 0)
+OD_LABELS = False
+
+def drawText(img, text, x, y, scale, color, thickness):
+    cv2.putText(img, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, scale, color, thickness, cv2.LINE_AA)
+
 # Draws the text in the window
-def showText(img, text, x, y, color):
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    cv2.putText(img, text, (x, y), font, 0.6, color, 2, cv2.LINE_AA)
+def showText(img, text, xpct, ypct, color):
+
+    height = np.size(img, 0)
+    width = np.size(img, 1)
+    x = int(width * xpct)
+    y = int(height * ypct)
+    scale = int(height / SCALE_SIZE)
+    thickness = int(height / SCALE_SIZE) * 2
+    drawText(img, text, x, y, scale, color, thickness)
 
 def showDuration(frame, duration):
     if duration > 0.0:
-        dur_ms = int(duration * 1000)
         fps = int(1 / duration)
-        showText(frame, "{:4d} ms, {:4d} FPS".format(dur_ms, fps), 445, 465, (0, 255, 0))
+        score_dur_ms = int(score_duration * 1000)
+        showText(frame, "{:4d} ms, {:4d} FPS".format(score_dur_ms, fps), 0.7, 0.5, TEXT_COLOR)
 
 # Draws the classification result
 def showClass(frame, det, conf):
-    showText(frame, "{} ({:2.1f}%)".format(det, conf), 5, 25, (0, 255, 0))
+    showText(frame, "{} ({:2.1f}%)".format(det, conf), 0.01, 0.06, TEXT_COLOR)
 
 # Draws a detection rectangle
-def drawRect(img, xmin, ymin, xmax, ymax, color, thickness):
-    cv2.rectangle(img, (xmin, ymin), (xmax, ymax), color, thickness)
+def drawRect(img, xmin, ymin, xmax, ymax, color, conf):
+    thickness = int((conf / 100) * 4) + 1
+    height = np.size(img, 0)
+    thick = thickness * int(height / SCALE_SIZE)
+    cv2.rectangle(img, (xmin, ymin), (xmax, ymax), color, thick)
+    if OD_LABELS:
+        scale = max(1, int(height / SCALE_SIZE) - 1)
+        thickness = int(height / SCALE_SIZE) * 2
+        drawText(img, "{:2d}%".format(int(conf)), xmax + 5, ymax, scale, color, thickness)
 
 # Draws a line for the key
-def drawKeyLine(img, y, width, color):
-    cv2.line(img, (10, y-10), (10+width, y-10), color, 2)
+def drawKeyLine(img, ypct, widthpct, color):
+    height = np.size(img, 0)
+    width = np.size(img, 1)
+    y = int(height * (ypct - 0.01))
+    xmin = int(width * 0.01)
+    xmax = int(width * (widthpct - 0.01))
+    thick = 4 * int(height / SCALE_SIZE)
+    cv2.line(img, (xmin, y), (xmax, y), color, thick)
 
 # globals
 max_color_num = 0
 colors = {}
-max_pos = 80
+max_pos = 0.05
 positions = {}
 
 def getColor(det):
@@ -143,9 +169,8 @@ def getPosition(det):
     else:
         pos = max_pos
         positions[det] = pos
-        max_pos += 20
+        max_pos += 0.05
         return pos
-
 
 # Shows the detections
 def showDets(frame, cropped_frame, dets):
@@ -168,13 +193,13 @@ def showDets(frame, cropped_frame, dets):
             color = getColor(det)
 
             # Draw the detection rectangle
-            drawRect(cropped_frame, x, y, x+w, y+h, color, int((conf / 100) * 4) + 1)
+            drawRect(cropped_frame, x, y, x+w, y+h, color, conf)
 
     # Draw the keys
     for det, color in colors.items():
         y = getPosition(det)
-        drawKeyLine(frame, y, 10, color)
-        showText(frame, "{}".format(det), 25, y, color)
+        drawKeyLine(frame, y, 0.05, color)
+        showText(frame, "{}".format(det), 0.05, y, color)
 
 # Records video and scores it
 def recordVideo(config):
