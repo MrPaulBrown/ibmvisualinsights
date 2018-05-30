@@ -10,6 +10,7 @@ import json
 import cv2
 import platform
 import os
+import numpy as np
 
 # Name of config file
 default_config = 'VIWatcherCloud.config'
@@ -66,31 +67,57 @@ def parseODResponse(text):
 
     return dets
 
+SCALE_SIZE = 480
+TEXT_COLOR = (0, 255, 0)
+OD_LABELS = True
+
+def drawText(img, text, x, y, scale, color, thickness):
+    cv2.putText(img, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, scale, color, thickness, cv2.LINE_AA)
+
 # Draws the text in the window
-def showText(img, text, x, y, color):
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    cv2.putText(img, text, (x, y), font, 0.6, color, 2, cv2.LINE_AA)
+def showText(img, text, xpct, ypct, color):
+
+    height = np.size(img, 0)
+    width = np.size(img, 1)
+    x = int(width * xpct)
+    y = int(height * ypct)
+    scale = int(height / SCALE_SIZE)
+    thickness = int(height / SCALE_SIZE) * 2
+    drawText(img, text, x, y, scale, color, thickness)
 
 def showDuration(frame, duration):
     if duration > 0.0:
-        showText(frame, "{:.2f} s".format(duration), 560, 465, (0, 255, 0))
+        showText(frame, "{:.2f}s".format(duration), 0.80, 0.95, TEXT_COLOR)
 
 # Draws the classification result
 def showClass(frame, det, conf):
-    showText(frame, "{} ({:2.1f}%)".format(det, conf), 5, 25, (0, 255, 0))
+    showText(frame, "{} ({:2.1f}%)".format(det, conf), 0.01, 0.06, TEXT_COLOR)
 
 # Draws a detection rectangle
-def drawRect(img, xmin, ymin, xmax, ymax, color, thickness):
-    cv2.rectangle(img, (xmin, ymin), (xmax, ymax), color, thickness)
+def drawRect(img, xmin, ymin, xmax, ymax, color, conf):
+    thickness = int((conf / 100) * 4) + 1
+    height = np.size(img, 0)
+    thick = thickness * int(height / SCALE_SIZE)
+    cv2.rectangle(img, (xmin, ymin), (xmax, ymax), color, thick)
+    if OD_LABELS:
+        scale = max(1, int(height / SCALE_SIZE) - 1)
+        thickness = int(height / SCALE_SIZE) * 2
+        drawText(img, "{:2d}%".format(int(conf)), xmax + 5, ymax, scale, color, thickness)
 
 # Draws a line for the key
-def drawKeyLine(img, y, width, color):
-    cv2.line(img, (10, y-10), (10+width, y-10), color, 2)
+def drawKeyLine(img, ypct, widthpct, color):
+    height = np.size(img, 0)
+    width = np.size(img, 1)
+    y = int(height * (ypct - 0.01))
+    xmin = int(width * 0.01)
+    xmax = int(width * (widthpct - 0.01))
+    thick = 4 * int(height / SCALE_SIZE)
+    cv2.line(img, (xmin, y), (xmax, y), color, thick)
 
 # globals
 max_color_num = 0
 colors = {}
-max_pos = 80
+max_pos = 0.05
 positions = {}
 
 def getColor(det):
@@ -110,7 +137,7 @@ def getPosition(det):
     else:
         pos = max_pos
         positions[det] = pos
-        max_pos += 20
+        max_pos += 0.05
         return pos
 
 
@@ -135,13 +162,13 @@ def showDets(frame, cropped_frame, dets):
             color = getColor(det)
 
             # Draw the detection rectangle
-            drawRect(cropped_frame, x, y, x+w, y+h, color, int((conf / 100) * 4) + 1)
+            drawRect(cropped_frame, x, y, x+w, y+h, color, conf)
 
     # Draw the keys
     for det, color in colors.items():
         y = getPosition(det)
-        drawKeyLine(frame, y, 10, color)
-        showText(frame, "{}".format(det), 25, y, color)
+        drawKeyLine(frame, y, 0.05, color)
+        showText(frame, "{}".format(det), 0.05, y, color)
 
 def cloud_score_image(image_path, config, score_type):
 
@@ -172,7 +199,8 @@ def cloud_score_image(image_path, config, score_type):
 def displayImage(image_path):
 
     img = cv2.imread(image_path, cv2.IMREAD_COLOR)
-    cv2.imshow("score", img)
+    if img is not None:
+        cv2.imshow("score", img)
 
     return img
 
@@ -207,30 +235,33 @@ class WatcherHandler(PatternMatchingEventHandler):
         # the file will be processed there
         img = displayImage(event.src_path)
 
-        score_type = config['Cloud']['ModelType']
+        # Need to test for None as dropped images aren't always readable
+        if img is not None:
 
-        score_time = time.clock()
-        r = cloud_score_image(event.src_path, config, score_type)
-        duration = time.clock() - score_time
+            score_type = config['Cloud']['ModelType']
 
-        if r.status_code == 200:
+            score_time = time.clock()
+            r = cloud_score_image(event.src_path, config, score_type)
+            duration = time.clock() - score_time
 
-            dets = None
-            det = None
-            conf = None
+            if r.status_code == 200:
 
-            if score_type == 'cls':
-                # Get det and conf from classifier
-                (det, conf) = parseResponse(r.text)
+                dets = None
+                det = None
+                conf = None
+
+                if score_type == 'cls':
+                    # Get det and conf from classifier
+                    (det, conf) = parseResponse(r.text)
+                else:
+                    # Get dets from OD response
+                    dets = parseODResponse(r.text)
+
+                updateImage(img, det, conf, dets, duration)
+
             else:
-                # Get dets from OD response
-                dets = parseODResponse(r.text)
-
-            updateImage(img, det, conf, dets, duration)
-
-        else:
-            # Score failed
-            print("{}: {}".format(r.status_code, r.text))
+                # Score failed
+                print("{}: {}".format(r.status_code, r.text))
 
     def log(self, event):
         """
