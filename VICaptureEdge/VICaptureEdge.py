@@ -11,6 +11,7 @@ import requests
 import json
 import random
 import cv2
+import numpy as np
 
 default_config = 'VICaptureEdge.config'
 
