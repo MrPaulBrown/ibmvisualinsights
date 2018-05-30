@@ -120,12 +120,6 @@ def parseODResponse(text):
 
     return dets
 
-def showDuration(frame, duration, score_duration):
-    if duration > 0.0:
-        fps = int(1 / duration)
-        score_dur_ms = int(score_duration * 1000)
-        showText(frame, "{:4d} ms, {:4d} FPS".format(score_dur_ms, fps), 430, 465, (0, 255, 0))
-
 SCALE_SIZE = 480
 TEXT_COLOR = (0, 255, 0)
 OD_LABELS = False
@@ -144,7 +138,7 @@ def showText(img, text, xpct, ypct, color):
     thickness = int(height / SCALE_SIZE) * 2
     drawText(img, text, x, y, scale, color, thickness)
 
-def showDuration(frame, duration):
+def showDuration(frame, duration, score_duration):
     if duration > 0.0:
         fps = int(1 / duration)
         score_dur_ms = int(score_duration * 1000)
