@@ -143,7 +143,7 @@ def showDuration(frame, duration, score_duration):
     if duration > 0.0:
         fps = int(1 / duration)
         score_dur_ms = int(score_duration * 1000)
-        showText(frame, "{:4d} ms, {:4d} FPS".format(score_dur_ms, fps), 0.7, 0.5, TEXT_COLOR)
+        showText(frame, "{:4d} ms, {:4d} FPS".format(score_dur_ms, fps), 0.5, 0.95, TEXT_COLOR)
 
 # Draws the classification result
 def showClass(frame, det, conf):
@@ -228,6 +228,8 @@ def showDets(frame, cropped_frame, dets):
 # Records video and scores it
 def recordVideo(config):
 
+    global OD_LABELS
+
     # Get options
     image_path = config['Record']['OutputDirectory']
 
@@ -297,7 +299,7 @@ def recordVideo(config):
             if (k%256 - 48) != cam_id:
                 cam_id = k%256 - 48
                 cam = cv2.VideoCapture(cam_id)
-        elif k%256 >= 108 and k%256 <= 76:
+        elif k%256 == 108 or k%256 == 76:
             # L - toggle labels
             OD_LABELS = not OD_LABELS
 
