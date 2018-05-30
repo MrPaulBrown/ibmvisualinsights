@@ -16,14 +16,14 @@ Modify the config file (VICaptureCloud.config) to set the following options:
 
 [Record]  
 OutputDirectory: **Set to the local path to store images**  
-  
+
 [Crop]  
 crop: **Set to _True_ to crop the frame or _False_ otherwise**  
 xmin: **X min of crop window**  
 ymin: **Y min of crop window**  
 xmax: **X max of crop window**  
 ymax: **Y max of crop window**  
-  
+
 [Cloud]  
 URL: **Set to Visual Insights uploadScoreImage URL**  
 Tenant: **Set to desired tenant ID**  
@@ -46,6 +46,7 @@ Space: Action (save image or score image)
 S: Toggle scoring (default: off)  
 C: Switch to classification mode (default: on)  
 O: Switch to Object Detection mode  
+L: Toggle object detection confidence labels  
 (0-9): Switch to camera ID #0-9 (default 0)  
 
 In scoring mode, the space bar can be used to send the current frame to IBM Visual Insights.

@@ -53,6 +53,7 @@ Space: Action (score image to cloud)
 S: Toggle scoring (default: off)  
 C: Switch to classification mode (default: on)  
 O: Switch to Object Detection mode  
+L: Toggle object detection confidence labels  
 (0-9): Switch to camera ID #0-9 (default 0)  
 
 The space bar can be used to send the current frame to IBM Visual Insights, otherwise it will be scored on the local edge.

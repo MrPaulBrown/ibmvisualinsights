@@ -378,6 +378,7 @@ def printHelp():
     print('S: Toggle scoring')
     print('C: Switch to classification mode (default)')
     print('O: Switch to Object Detection mode')
+    print('L: Toggle object detection confidence labels')
     print('(0-9): Switch to camera ID #0-9 (default 0)')
 
 if __name__ == '__main__':

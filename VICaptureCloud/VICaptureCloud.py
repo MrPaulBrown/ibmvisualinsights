@@ -205,6 +205,8 @@ def showDets(frame, cropped_frame, dets):
 # Records video and scores it
 def recordVideo(config):
 
+    global OD_LABELS
+
     # Get options
     image_path = config['Record']['OutputDirectory']
 
@@ -275,7 +277,9 @@ def recordVideo(config):
             if (k%256 - 48) != cam_id:
                 cam_id = k%256 - 48
                 cam = cv2.VideoCapture(cam_id)
-
+        elif k%256 == 108 or k%256 == 76:
+            # L - toggle labels
+            OD_LABELS = not OD_LABELS
 
         # Check action flag - if set then write the image
         if action:
@@ -352,6 +356,7 @@ def printHelp():
     print('S: Toggle scoring')
     print('C: Switch to classification mode (default)')
     print('O: Switch to Object Detection mode')
+    print('L: Toggle object detection confidence labels')
     print('(0-9): Switch to camera ID #0-9 (default 0)')
 
 if __name__ == '__main__':
