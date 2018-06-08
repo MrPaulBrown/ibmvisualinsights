@@ -120,7 +120,7 @@ def showDuration(frame, duration):
     if duration > 0.0:
         fps = int(1 / duration)
         score_dur_ms = int(duration * 1000)
-        showText(frame, "{:4d} ms, {:4d} FPS".format(score_dur_ms, fps), 0.7, 0.5, TEXT_COLOR)
+        showText(frame, "{:4d} ms, {:4d} FPS".format(score_dur_ms, fps), 0.5, 0.95, TEXT_COLOR)
 
 # Draws the classification result
 def showClass(frame, det, conf):
