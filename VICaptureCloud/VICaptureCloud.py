@@ -225,7 +225,7 @@ def recordVideo(config):
     cam = cv2.VideoCapture(cam_id)
     cv2.namedWindow("capture", cv2.WINDOW_NORMAL)
     if crop:
-        cv2.namedWindow("crop")
+        cv2.namedWindow("crop", cv2.WINDOW_NORMAL)
 
     # Set up timers
     last_time = time.clock()
@@ -311,7 +311,7 @@ def recordVideo(config):
 
                     # Create the score window if it doesn't exist
                     if not score_window:
-                        score_window = cv2.namedWindow("score")
+                        score_window = cv2.namedWindow("score", cv2.WINDOW_NORMAL)
 
                     # Get a snapshot of the frame
                     snapshot = score_frame.copy()

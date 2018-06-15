@@ -249,7 +249,7 @@ def recordVideo(config):
     cam = cv2.VideoCapture(0)
     cv2.namedWindow("capture", cv2.WINDOW_NORMAL)
     if crop:
-        cv2.namedWindow("crop")
+        cv2.namedWindow("crop", cv2.WINDOW_NORMAL)
 
     # Set up timers
     last_time = time.clock()
