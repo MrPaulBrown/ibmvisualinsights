@@ -153,7 +153,7 @@ def showClass(frame, det, conf):
 def drawRect(img, xmin, ymin, xmax, ymax, color, conf):
     thickness = int((conf / 100) * 4) + 1
     height = np.size(img, 0)
-    thick = thickness * int(height / SCALE_SIZE)
+    thick = thickness * max(1, int(height / SCALE_SIZE))
     cv2.rectangle(img, (xmin, ymin), (xmax, ymax), color, thick)
     if OD_LABELS:
         scale = max(1, int(height / SCALE_SIZE) - 1)
@@ -167,7 +167,7 @@ def drawKeyLine(img, ypct, widthpct, color):
     y = int(height * (ypct - 0.01))
     xmin = int(width * 0.01)
     xmax = int(width * (widthpct - 0.01))
-    thick = 4 * int(height / SCALE_SIZE)
+    thick = 4 * max(1, int(height / SCALE_SIZE))
     cv2.line(img, (xmin, y), (xmax, y), color, thick)
 
 # globals
