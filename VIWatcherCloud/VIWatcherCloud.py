@@ -81,8 +81,8 @@ def showText(img, text, xpct, ypct, color):
     width = np.size(img, 1)
     x = int(width * xpct)
     y = int(height * ypct)
-    scale = int(height / SCALE_SIZE)
-    thickness = int(height / SCALE_SIZE) * 2
+    scale = max(1, int(height / SCALE_SIZE))
+    thickness = min(max(2, int(height / SCALE_SIZE) * 2), 10)
     drawText(img, text, x, y, scale, color, thickness)
 
 def showDuration(frame, duration):
