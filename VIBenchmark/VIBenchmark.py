@@ -5,6 +5,8 @@ import glob
 import time
 import os
 import sys
+import numpy as np
+from scipy import stats
 
 default_config = 'VIBenchmark.config'
 
@@ -29,10 +31,22 @@ def getFileSet(image_path, image_wildcard):
 def scoreImages(fileset, duration, url, modelID):
 
     end_time = time.perf_counter() + duration
+    image_count = 0
+    sum_dur = 0.0
+    min_dur = None
+    max_dur = None
+
+    durations = list()
 
     while (time.perf_counter() < end_time):
         image = random.choice(fileset)
+        iter_start = time.perf_counter()
         score_image(image, url, modelID)
+        iter_dur = time.perf_counter() - iter_start
+        durations.add(iter_dur)
+
+    durs = np.array(durations)
+    print(str(stats.describe(durs)))
 
 if __name__ == '__main__':
     args = sys.argv[1:]
