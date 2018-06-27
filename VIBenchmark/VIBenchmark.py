@@ -4,6 +4,7 @@ import random
 import glob
 import time
 import os
+import sys
 
 default_config = 'VIBenchmark.config'
 
@@ -27,9 +28,9 @@ def getFileSet(image_path, image_wildcard):
 
 def scoreImages(fileset, duration, url, modelID):
 
-    end_time = time.clock() + (duration * 1000)
+    end_time = time.perf_counter() + duration
 
-    while (time.clock < end_time):
+    while (time.perf_counter() < end_time):
         image = random.choice(fileset)
         score_image(image, url, modelID)
 
