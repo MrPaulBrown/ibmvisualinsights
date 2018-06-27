@@ -1,5 +1,9 @@
 import requests
 from configparser import SafeConfigParser
+import random
+import glob
+import time
+import os
 
 default_config = 'VIBenchmark.config'
 
@@ -28,8 +32,6 @@ def scoreImages(fileset, duration, url, modelID):
     while (time.clock < end_time):
         image = random.choice(fileset)
         score_image(image, url, modelID)
-
-        
 
 if __name__ == '__main__':
     args = sys.argv[1:]
