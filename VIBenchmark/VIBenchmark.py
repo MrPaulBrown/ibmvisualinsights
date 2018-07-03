@@ -43,7 +43,7 @@ def scoreImages(fileset, duration, url, modelID):
         iter_start = time.perf_counter()
         score_image(image, url, modelID)
         iter_dur = time.perf_counter() - iter_start
-        durations.add(iter_dur)
+        durations.append(iter_dur)
 
     durs = np.array(durations)
     print(str(stats.describe(durs)))
