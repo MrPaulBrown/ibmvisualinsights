@@ -6,7 +6,7 @@ This script crops an image, or set of images in a directory, into a set of overl
 
 `python VIImageTile.py -i <input> -o <output> -x <xsize> -y <ysize> -m <min overlap>`  
 
-Where:
+Where:  
 `<input>` is the source file or Directory  
 `<output>` is the target Directory  
 `<xsize>` is the size of the tile horizontally  
