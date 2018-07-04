@@ -2,6 +2,10 @@
 
 This script uses an attached webcam to capture images for scoring against an IBM Visual Insights model deployed to an Edge system.  It is designed to be run directly on the Edge system.
 
+Here's an example of the script in action
+
+[![VI Playing Cards Demo](http://img.youtube.com/vi/2DH_vLNYs4w/0.jpg)](http://www.youtube.com/watch?v=2DH_vLNYs4w)
+
 ## Set-up
 
 Set up the environment and common libraries as per the general README.md
