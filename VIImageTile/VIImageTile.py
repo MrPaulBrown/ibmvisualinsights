@@ -12,51 +12,56 @@ def getOverlap(size, num_tiles, tile_size):
 
 def tileImage(filename, outputdir, xsize, ysize, min_overlap):
 
-    print("Tiling: {}".format(filename))
-    print("Output dir: {}".format(outputdir))
+    # print("Tiling: {}".format(filename))
+    # print("Output dir: {}".format(outputdir))
 
     img = cv2.imread(filename)
 
-    # get image height, width
-    (h, w) = img.shape[:2]
+    if img is not None:
 
-    print("h: {}, w: {}".format(h, w))
+        # get image height, width
+        (h, w) = img.shape[:2]
 
-    xtiles = getNumberOfTiles(w, xsize, min_overlap)
-    ytiles = getNumberOfTiles(h, ysize, min_overlap)
+        # print("h: {}, w: {}".format(h, w))
 
-    xoverlap = getOverlap(w, xtiles, xsize)
-    yoverlap = getOverlap(h, ytiles, ysize)
+        xtiles = getNumberOfTiles(w, xsize, min_overlap)
+        ytiles = getNumberOfTiles(h, ysize, min_overlap)
 
-    print("xtiles: {}, xoverlap: {}".format(xtiles, xoverlap))
-    print("ytiles: {}, yoverlap: {}".format(ytiles, yoverlap))
+        xoverlap = getOverlap(w, xtiles, xsize)
+        yoverlap = getOverlap(h, ytiles, ysize)
 
+        # print("xtiles: {}, xoverlap: {}".format(xtiles, xoverlap))
+        # print("ytiles: {}, yoverlap: {}".format(ytiles, yoverlap))
 
-    basename, fname = os.path.split(filename)
-    rootname, file_extension = os.path.splitext(fname)
+        basename, fname = os.path.split(filename)
+        rootname, file_extension = os.path.splitext(fname)
 
-    yoffset = 0
+        yoffset = 0
 
-    for ytile in range(ytiles):
-        xoffset = 0
-        for xtile in range(xtiles):
+        for ytile in range(ytiles):
+            xoffset = 0
+            for xtile in range(xtiles):
 
-            xmin = xoffset
-            xmax = xoffset + xsize
-            ymin = yoffset
-            ymax = yoffset + ysize
-            crop = img[int(ymin):int(ymax), int(xmin):int(xmax)]
+                xmin = xoffset
+                xmax = xoffset + xsize
+                ymin = yoffset
+                ymax = yoffset + ysize
+                crop = img[int(ymin):int(ymax), int(xmin):int(xmax)]
 
-            cropfn = "{}_{}_{}{}".format(rootname, ytile, xtile, file_extension)
-            crop_filename = os.path.join(outputdir, cropfn)
+                cropfn = "{}_{}_{}{}".format(rootname, ytile, xtile, file_extension)
+                crop_filename = os.path.join(outputdir, cropfn)
 
-            # print("{}, ({}, {}) ({}, {})".format(crop_filename, xmin, ymin, xmax, ymax))
+                # print("{}, ({}, {}) ({}, {})".format(crop_filename, xmin, ymin, xmax, ymax))
 
-            cv2.imwrite(crop_filename, crop)
+                cv2.imwrite(crop_filename, crop)
 
-            xoffset = xmax - xoverlap
+                xoffset = xmax - xoverlap
 
-        yoffset = ymax - yoverlap
+            yoffset = ymax - yoverlap
+
+    else:
+        # Problem reading file
+        print("Failed to read file: {}".format(filename))
 
 
 def main(argv):
