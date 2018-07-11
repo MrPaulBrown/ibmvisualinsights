@@ -14,7 +14,7 @@ These scripts require at least one model to be deployed in IBM Visual Insights a
 
 ### Config file
 
-Modify the config file (VIWatcherCloud.config) to set the following options:
+Modify the config file (VISimulator.config) to set the following options:
 
 [Images]  
 Directory:  **Set to the local path location of your images**  
