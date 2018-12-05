@@ -183,7 +183,7 @@ def cloud_score_image(image_path, config, score_type):
 
     # Request parameters
     params = {'productType': product, 'cell': cell,
-        'user': os.environ['VIUSER'], 'tenant': config['Cloud']['Tenant'],
+        'user': os.environ['VIUSER'],
         'solution': 'vi'}
 
     # Request headers

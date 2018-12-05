@@ -22,7 +22,7 @@ def rotate_image(mat, angle):
     rotated_mat = cv2.warpAffine(mat, rotation_mat, (bound_w, bound_h))
     return rotated_mat
 
-def rotcropImage(filename, outputdir, xsize, ysize, rotations):
+def rotcropImage(filename, outputdir, rotations, degs):
 
     # print("Tiling: {}".format(filename))
     # print("Output dir: {}".format(outputdir))
@@ -34,19 +34,22 @@ def rotcropImage(filename, outputdir, xsize, ysize, rotations):
         basename, fname = os.path.split(filename)
         rootname, file_extension = os.path.splitext(fname)
 
+        (h, w) = img.shape[:2]
+        size = min(h, w)
+
         # Perform Rotations
         for r in range(rotations):
 
-            angle = 360 * (r / rotations)
+            angle = (degs * (r / rotations)) - (degs / 2.0)
 
             rot_img = rotate_image(img, angle)
 
             # get image height, width
             (h, w) = rot_img.shape[:2]
-            xmin = int(w/2 - xsize/2)
-            xmax = int(w/2 + xsize/2)
-            ymin = int(h/2 - ysize/2)
-            ymax = int(h/2 + ysize/2)
+            xmin = int(w/2 - size/2)
+            xmax = int(w/2 + size/2)
+            ymin = int(h/2 - size/2)
+            ymax = int(h/2 + size/2)
 
             crop = rot_img[ymin:ymax, xmin:xmax]
 
@@ -59,57 +62,12 @@ def rotcropImage(filename, outputdir, xsize, ysize, rotations):
         # Problem reading file
         print("Failed to read file: {}".format(filename))
 
-
-def main(argv):
-    input = ''
-    output = ''
-    xsize = 0
-    ysize = 0
-    rotations = 4
-    try:
-        opts, args = getopt.getopt(argv,"hi:o:x:y:r:",["input=","output=","xsize=","ysize=","minoverlap="])
-    except getopt.GetoptError:
-        print('VIRotCrop.py -i <input> -o <output> -x <x size> -y <y size> -r <# rotations>')
-        sys.exit(2)
-
-    for opt, arg in opts:
-        if opt == '-h':
-            print('VIImageTile.py -i <input> -o <output> -x <x size> -y <y size> -m <min overlap>')
-            sys.exit()
-        elif opt in ("-i", "--input"):
-            input = arg
-            if not os.path.exists(input):
-                print('-i <input> path does not exist')
-                sys.exit(2)
-        elif opt in ("-o", "--output"):
-            output = arg
-        elif opt in ("-x", "--xsize"):
-            try:
-                xsize = int(arg)
-            except ValueError:
-                print('-x <x size> option requires an integer value')
-                sys.exit(2)
-        elif opt in ("-y", "--ysize"):
-            try:
-                ysize = int(arg)
-            except ValueError:
-                print('-y <y size> option requires an integer value')
-                sys.exit(2)
-        elif opt in ("-r", "--rotations"):
-            try:
-                rotations = int(arg)
-            except ValueError:
-                print('-r <rotations> option requires an integer value')
-                sys.exit(2)
+def doRotCrop(input, output, rotations, degrees):
 
     print('Input is {}'.format(input))
     print('Output is {}'.format(output))
-    print('x, y is {}, {}'.format(xsize, ysize))
     print('Rotations is {}'.format(rotations))
-
-    if xsize < 100 or ysize < 100:
-        print('Image size too small')
-        sys.exit(2)
+    print('Degrees is {}'.format(degrees))
 
     if rotations > 360:
         print('Too many rotations')
@@ -117,6 +75,10 @@ def main(argv):
 
     if rotations < 1:
         print('Too few rotations')
+        sys.exit(2)
+
+    if degrees > 360 or degrees < 0:
+        print('Degrees should be in range 0-360')
         sys.exit(2)
 
     if not os.path.exists(output):
@@ -132,9 +94,47 @@ def main(argv):
     if os.path.isdir(input):
         for f in os.listdir(input):
             filename = os.path.join(input, f)
-            rotcropImage(filename, output, xsize, ysize, rotations)
+            rotcropImage(filename, output, rotations, degrees)
     else:
-        rotcropImage(input, output, xsize, ysize, rotations)
+        rotcropImage(input, output, rotations, degrees)
+
+def main(argv):
+    input = ''
+    output = ''
+    xsize = 0
+    ysize = 0
+    rotations = 4
+    try:
+        opts, args = getopt.getopt(argv,"hi:o:r:d:",["input=","output=","rotations=","degrees="])
+    except getopt.GetoptError:
+        print('VIImageRotCrop.py -i <input> -o <output> -r <# rotations> -d <degrees>')
+        sys.exit(2)
+
+    for opt, arg in opts:
+        if opt == '-h':
+            print('VIImageRotCrop.py -i <input> -o <output> -r <# rotations> -d <degrees>')
+            sys.exit()
+        elif opt in ("-i", "--input"):
+            input = arg
+            if not os.path.exists(input):
+                print('-i <input> path does not exist')
+                sys.exit(2)
+        elif opt in ("-o", "--output"):
+            output = arg
+        elif opt in ("-r", "--rotations"):
+            try:
+                rotations = int(arg)
+            except ValueError:
+                print('-r <rotations> option requires an integer value')
+                sys.exit(2)
+        elif opt in ("-d", "--degrees"):
+            try:
+                degrees = int(arg)
+            except ValueError:
+                print('-d <degrees> option requires an integer value')
+                sys.exit(2)
+
+    doRotCrop(input, output, rotations, degrees)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

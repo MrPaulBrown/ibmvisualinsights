@@ -4,6 +4,10 @@ This utility script creates a set of image groups in Visual Insights from a dire
 
 The script iterates through the sub-directories of the target directory (passed on the command line) and automatically zips up the images (files with extension ".jpg") into a zip file for that sub-directory.  It then creates an image group in VI for each sub-directory (using the sub-directory name as the image name) if that image group doesn't already exist.  It then adds the associated zip file to the image group.
 
+# VILoadZips
+
+This script takes a directory of existing zip files and loads them to VI, creating image groups based on the filename of the zips (if required)
+
 ## Set-up
 
 Set up the environment and common libraries as per the general README.md
@@ -12,7 +16,8 @@ Set up the environment and common libraries as per the general README.md
 
 Run from python, e.g.
 
-`python VIZipAndLoad.py -d <target directory>`
+`python VIZipAndLoad.py -d <target directory> -p <prefix> -s <split pct> --defect|--no-defect`
+`python VILoadZips.py -d <target directory> -p <prefix>`
 
 Arguments:
 
