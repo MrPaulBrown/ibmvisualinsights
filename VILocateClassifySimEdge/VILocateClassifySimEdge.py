@@ -14,6 +14,9 @@ import cv2
 import numpy as np
 import math
 import imutils
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 default_config = 'VILocateClassifySimEdge.config'
 
@@ -29,22 +32,53 @@ color_palette = [
 def score_image(image_path, config, score_type):
 
     # Pick up options
-    url = config['Score']['URL']
+    url = config['Edge']['URL']
     if score_type == 'cls':
-        modelID = config['Score']['CLSModelID']
+        modelID = config['Edge']['ModelID']
     else:
-        modelID = config['Score']['ODModelID']
+        modelID = config['Edge']['ModelID']
 
     # Json body for request
     json = { 'modelID': modelID, 'imageFile': image_path }
 
     # score against the Edge API
     try:
-        r = requests.post(url, json=json)
+        r = requests.post(url, json=json, verify=False)
        # print(r.status_code)
     except requests.exceptions.RequestException as e:
         print(e)
-        sys.exit(1)
+        sys.exit(2)
+
+    return r
+
+# Score image on edge
+def edge_score_image(image_path, config, score_type):
+
+    r = None
+
+    # Pick up options
+    url = config['Edge']['URL']
+    if score_type == 'cls':
+        cell = config['Edge']['CLSCell']
+        product = config['Edge']['CLSProduct']
+    else:
+        cell = config['Edge']['ODCell']
+        product = config['Edge']['ODProduct']
+
+    # Open file and load into content
+    data = open(image_path, 'rb').read()
+
+    # Request parameters
+    params = {'productType': product, 'cell': cell}
+
+    # Request headers
+    headers = {'Content-Type': 'application/binary', 'Authorization': 'Basic YWRtaW46cGFzc3cwcmRA' }
+
+    # score against the Cloud Scoring API
+    try:
+        r = requests.post(url, params=params, headers=headers, data=data, verify=False)
+    except requests.exceptions.RequestException as e:
+        print(e)
 
     return r
 
@@ -211,10 +245,10 @@ def showDets(frame, cropped_frame, dets, posx, posy):
         if det != '':
             # get positions
             position = d['position']
-            x = position['x'] + posx
-            y = position['y'] + posy
-            w = position['width'] + posx
-            h = position['height'] + posy
+            x = position['x']
+            y = position['y']
+            w = position['width']
+            h = position['height']
 
             color = getColor(det)
 
@@ -231,7 +265,6 @@ def getBaseImages(image_path):
     if os.path.exists(image_path):
         if os.path.isdir(image_path):
             images = os.listdir(image_path)
-            print(images)
             return images
         else:
             print("Image path isn't a directory: {}".format(image_path))
@@ -296,8 +329,6 @@ def simulateVideo(config):
         posx = max(0, int(w/2 - od_width/2))
         posy = max(0, int(h/2 - od_height/2))
 
-        print('dims: ({},{}), pos: ({},{})'.format(h, w, posx, posy))
-
         score = False
 
         # Set up timers
@@ -312,11 +343,12 @@ def simulateVideo(config):
         while True:
 
             frame = img.copy()
+            crop_frame = frame[posy:posy+od_height, posx:posx+od_width]
 
             drawRect(frame, max(0, posx-1), max(0, posy-1), min(w, posx+od_width+1), min(h, posy+od_height+1), [128,128,128], 1)
 
             # Get keyboard input
-            k = cv2.waitKey(1)
+            k = cv2.waitKey(0)
             cloud_score = False
 
             if k%256 == 27:
@@ -394,11 +426,14 @@ def simulateVideo(config):
                 cv2.imwrite(image_filename, od_score_img)
 
                 # Score image on edge
-                score_start_time = time.clock()
-                r = score_image(image_filename, config, "od")
-                score_duration = time.clock() - score_start_time
+                score_start_time = time.perf_counter()
+                r = edge_score_image(image_filename, config, "od")
+                # r = score_image(image_filename, config, "od")
+                score_duration = time.perf_counter() - score_start_time
 
                 if r.status_code == 200:
+
+                    # print(r.text)
 
                     # Get dets from OD response
                     dets = parseODResponse(r.text)
@@ -420,7 +455,7 @@ def simulateVideo(config):
                     os.remove(image_filename)
 
             # Calc timings
-            current_time = time.clock()
+            current_time = time.perf_counter()
             duration = current_time - last_time
             last_time = current_time
 
@@ -428,14 +463,15 @@ def simulateVideo(config):
             if det:
                 showClass(frame, det, conf)
             if dets:
-                showDets(frame, crop_frame, dets, posx, posy)
+                showDets(crop_frame, crop_frame, dets, posx, posy)
 
             # Show timer / frame rate
-            # showDuration(frame, duration, score_duration)
+            showDuration(crop_frame, duration, score_duration)
+
+            # print("Duration: {:f}".format(score_duration))
 
             # Show the frames in a window
             cv2.imshow("camera", frame)
-            crop_frame = frame[posy:posy+od_height, posx:posx+od_width]
             cv2.imshow("crop", crop_frame)
 
     cv2.destroyAllWindows()
