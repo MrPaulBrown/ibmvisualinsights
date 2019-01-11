@@ -44,5 +44,5 @@ Product: **Set to product type code for model**
 
 Run from python, e.g.
 
-`python ValidateImages.py`
-`python ValidateImagesOD.py`
+`python ValidateImages.py`  
+`python ValidateImagesOD.py`  
