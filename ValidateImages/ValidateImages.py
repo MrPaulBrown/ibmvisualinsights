@@ -199,7 +199,7 @@ if __name__ == '__main__':
                         pred = ''
                         fname = os.path.join(dirname, f)
                         if score_type == 'VI':
-                            r = cloud_score_image(fname, config, 'cls')
+                            r = cloud_score_image(fname, config)
                             if r.status_code == 200:
                                 pred = vi_parse(r.text)
                                 actuals.append(d)
