@@ -378,7 +378,7 @@ def processImage(filename):
 
     offsets = tileAndScore(filename)
 
-    for
+    # for
 
     score_type = config['Score']['ModelType']
     score_mode = config['Score']['ScoreMode']
